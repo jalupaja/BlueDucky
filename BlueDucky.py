@@ -276,11 +276,6 @@ class L2CAPClient:
             self.connected = False
             log.error("ERROR connecting on port %d: %s" % (self.port, ex))
             raise ConnectionFailureException(f"Connection failure on port {self.port}")
-            if (error == True & self.port == 14):
-                print("{reset}[{red}!{reset}] {red}CRITICAL ERROR{reset}: {reset}Attempted Connection to {red}{target_address} {reset}was {red}denied{reset}.")
-                return self.connected
-
-
 
         return self.connected
 
