@@ -301,7 +301,7 @@ class L2CAPClient:
         press_report = self.encode_keyboard_input(modifier, key)
         self.send(press_report)
         time.sleep(delay)  # Delay to simulate key press
-    
+
         # Release the combination
         release_report = self.encode_keyboard_input()
         self.send(release_report)
@@ -411,12 +411,12 @@ def process_duckyscript(client, duckyscript, current_line=0, current_position=0)
                                 client.send_keypress(key_code)
                             else:
                                 log.warning(f"Unsupported character '{char}' in Duckyscript")
-                                
+
                         current_position = char_position
 
                     except AttributeError as e:
                         log.warning(f"Attribute error: {e} - Unsupported character '{char}' in Duckyscript")
-            
+
             elif any(mod in line for mod in ["SHIFT", "ALT", "CTRL", "GUI", "COMMAND", "WINDOWS"]):
                 # Process modifier key combinations
                 components = line.split()
@@ -435,8 +435,8 @@ def process_duckyscript(client, duckyscript, current_line=0, current_position=0)
             elif line.startswith("ENTER"):
                 client.send_keypress(Key_Codes.ENTER)
             # After processing each line, reset current_position to 0 and increment current_line
-            current_position = 0  
-            current_line += 1  
+            current_position = 0
+            current_line += 1
 
     except ReconnectionRequiredException:
         raise ReconnectionRequiredException("Reconnection required", current_line, current_position)
@@ -492,7 +492,7 @@ def char_to_key_code(char):
 	    'X': 'x',
 	    'Y': 'y',
 	    'Z': 'z',
-	
+
     }
     return shift_char_map.get(char)
 
@@ -599,7 +599,7 @@ def terminate_child_processes():
         if proc.is_alive():
             proc.terminate()
             proc.join()
-    
+
 
 def setup_bluetooth(target_address, adapter_id):
     restart_bluetooth_daemon()
@@ -669,13 +669,13 @@ def main():
     parser.add_argument('--adapter', type=str, default='hci0', help='Specify the Bluetooth adapter to use (default: hci0)')
     args = parser.parse_args()
     adapter_id = args.adapter
-        
+
     main_menu()
     target_address = get_target_address()
     if not target_address:
         log.info("No target address provided. Exiting..")
         return
-    
+
     script_directory = os.path.dirname(os.path.realpath(__file__))
     payload_folder = os.path.join(script_directory, 'payloads/')  # Specify the relative path to the payloads folder.
     payloads = os.listdir(payload_folder)
@@ -706,14 +706,14 @@ def main():
         print(f"{red}No payload selected.")
 
 
-    
+
     if not duckyscript:
         log.info("Payload file not found. Exiting.")
         return
 
     adapter = setup_bluetooth(target_address, adapter_id)
     adapter.enable_ssp()
-    
+
     current_line = 0
     current_position = 0
     connection_manager = L2CAPConnectionManager(target_address)
