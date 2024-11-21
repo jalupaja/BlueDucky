@@ -1,15 +1,14 @@
 import os, bluetooth, re, subprocess, time, curses
 import logging as log
+from utils.AnsiColorCode import AnsiColorCode
 
 ##########################
 # UI Redesign by Lamento #
 ##########################
 
 def get_target_address():
-    blue = "\033[94m"
-    reset = "\033[0m"
-    print(f"\n What is the target address{blue}? {reset}Leave blank and we will scan for you{blue}!{reset}")
-    target_address = input(f"\n {blue}> ")
+    print(f"\n What is the target address{AnsiColorCode.BLUE}? {AnsiColorCode.RESET}Leave blank and we will scan for you{AnsiColorCode.BLUE}!{AnsiColorCode.RESET}")
+    target_address = input(f"\n {AnsiColorCode.BLUE}> ")
 
     if target_address == "":
         devices = scan_for_devices()
@@ -18,7 +17,7 @@ def get_target_address():
             if len(devices) == 1 and isinstance(devices[0], tuple) and len(devices[0]) == 2:
                 # A single known device was chosen, no need to ask for selection
                 # I think it would be better to ask, as sometimes I do not want to chose this device and actually need solely to scan for actual devices.
-                confirm = input(f"\n Would you like to register this device{blue}:\n{reset}{devices[0][1]} {devices[0][0]}{blue}? {blue}({reset}y{blue}/{reset}n{blue}) {blue}").strip().lower()
+                confirm = input(f"\n Would you like to register this device{AnsiColorCode.BLUE}:\n{AnsiColorCode.RESET}{devices[0][1]} {devices[0][0]}{AnsiColorCode.BLUE}? {AnsiColorCode.BLUE}({AnsiColorCode.RESET}y{AnsiColorCode.BLUE}/{AnsiColorCode.RESET}n{AnsiColorCode.BLUE}) {AnsiColorCode.BLUE}").strip().lower()
                 if confirm == 'y' or confirm == 'yes':
                     return devices[0][0]
                 elif confirm != 'y' or 'yes':
@@ -26,8 +25,8 @@ def get_target_address():
             else:
                 # Show list of scanned devices for user selection
                 for idx, (addr, name) in enumerate(devices):
-                    print(f"{reset}[{blue}{idx + 1}{reset}] {blue}Device Name{reset}: {blue}{name}, {blue}Address{reset}: {blue}{addr}")
-                selection = int(input(f"\n{reset}Select a device by number{blue}: {blue}")) - 1
+                    print(f"{AnsiColorCode.RESET}[{AnsiColorCode.BLUE}{idx + 1}{AnsiColorCode.RESET}] {AnsiColorCode.BLUE}Device Name{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{name}, {AnsiColorCode.BLUE}Address{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{addr}")
+                selection = int(input(f"\n{AnsiColorCode.RESET}Select a device by number{AnsiColorCode.BLUE}: {AnsiColorCode.BLUE}")) - 1
                 if 0 <= selection < len(devices):
                     target_address = devices[selection][0]
                 else:
@@ -53,7 +52,8 @@ def run(command):
 
 def print_fancy_ascii_art():
 
-    ascii_art = """
+    print(f"""
+    {AnsiColorCode.BLUE}
 	⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠤⠄⠒⠒⠒⠒⠒⠒⠂⠠⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 	⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠴⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠓⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 	⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠞⠁⠀⠀⠀⠀⣀⡤⠴⠒⠒⠒⠒⠦⠤⣀⠀⠀⠀⠙⢆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -75,9 +75,8 @@ def print_fancy_ascii_art():
 	⠀⠀⠀⠀⠀⠈⢧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⡶⠿⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡴⠃⠀⠀⠀
 	⠀⠀⠀⠀⠀⠀⠀⠳⣄⢀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠤⠖⣪⡵⠋⠀⠀⠀⠀⠀
 	⠀⠀⠀⠀⠀⠀⠀⠀⠈⠑⠫⠭⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣭⣭⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⡴⠶⠛⠉⠀⠀⠀⠀⠀⠀⠀
-"""
-
-    print("\033[94m" + ascii_art + "\033[0m")  # Blue color
+{AnsiColorCode.RESET}
+""")
 
 def clear_screen():
     os.system('clear')
@@ -92,40 +91,24 @@ def save_devices_to_file(devices, filename='known_devices.txt'):
 def scan_for_devices():
     main_menu()
 
-    blue = "\033[94m"
-    error = "\033[91m"
-    reset = "\033[0m"
-
     # Load known devices
     known_devices = load_known_devices()
     if known_devices:
-        blue = "\033[94m"
-        error = "\033[91m"
-        reset = "\033[0m"
-        print(f"\n{reset}Known devices{blue}:")
+        print(f"\n{AnsiColorCode.RESET}Known devices{AnsiColorCode.BLUE}:")
         for idx, (addr, name) in enumerate(known_devices):
-            blue = "\033[94m"
-            error = "\033[91m"
-            reset = "\033[0m"
-            print(f"{blue}{idx + 1}{reset}: Device Name: {blue}{name}, Address: {blue}{addr}")
+            print(f"{AnsiColorCode.BLUE}{idx + 1}{AnsiColorCode.RESET}: Device Name: {AnsiColorCode.BLUE}{name}, Address: {AnsiColorCode.BLUE}{addr}")
 
-        blue = "\033[94m"
-        error = "\033[91m"
-        reset = "\033[0m"
-        use_known_device = input(f"\n{reset}Do you want to use one of these known devices{blue}? {blue}({reset}yes{blue}/{reset}no{blue}): ")
+        use_known_device = input(f"\n{AnsiColorCode.RESET}Do you want to use one of these known devices{AnsiColorCode.BLUE}? {AnsiColorCode.BLUE}({AnsiColorCode.RESET}yes{AnsiColorCode.BLUE}/{AnsiColorCode.RESET}no{AnsiColorCode.BLUE}): ")
         if use_known_device.lower() == 'yes':
-            device_choice = int(input(f"{reset}Enter the index number of the device to attack{blue}: "))
+            device_choice = int(input(f"{AnsiColorCode.RESET}Enter the index number of the device to attack{AnsiColorCode.BLUE}: "))
             return [known_devices[device_choice - 1]]
 
     # Normal Bluetooth scan
-    blue = "\033[94m"
-    error = "\033[91m"
-    reset = "\033[0m"
-    print(f"\n{reset}Attempting to scan now{blue}...")
+    print(f"\n{AnsiColorCode.RESET}Attempting to scan now{AnsiColorCode.BLUE}...")
     nearby_devices = bluetooth.discover_devices(duration=8, lookup_names=True, flush_cache=True, lookup_class=True)
     device_list = []
     if len(nearby_devices) == 0:
-        print(f"\n{reset}[{error}+{reset}] No nearby devices found.")
+        print(f"\n{AnsiColorCode.RESET}[{error}+{AnsiColorCode.RESET}] No nearby devices found.")
     else:
         print("\nFound {} nearby device(s):".format(len(nearby_devices)))
         for idx, (addr, name, _) in enumerate(nearby_devices):
@@ -137,7 +120,7 @@ def scan_for_devices():
         known_devices += new_devices
         save_devices_to_file(known_devices)
         for idx, (addr, name) in enumerate(new_devices):
-            print(f"{reset}{idx + 1}{blue}: {blue}Device Name{reset}: {blue}{name}{reset}, {blue}Address{reset}: {blue}{addr}")
+            print(f"{AnsiColorCode.RESET}{idx + 1}{AnsiColorCode.BLUE}: {AnsiColorCode.BLUE}Device Name{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{name}{AnsiColorCode.RESET}, {AnsiColorCode.BLUE}Address{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{addr}")
     return device_list
 
 def getterm():
@@ -146,8 +129,6 @@ def getterm():
 
 
 def print_menu():
-    blue = '\033[94m'
-    reset = "\033[0m"
     title = "BlueDucky - Bluetooth Device Attacker"
     vertext = "Ver 2.1"
     motd1 = f"Remember, you can still attack devices without visibility.."
@@ -155,13 +136,13 @@ def print_menu():
     terminal_width = getterm()
     separator = "=" * terminal_width
 
-    print(blue + separator)  # Blue color for separator
-    print(reset + title.center(len(separator)))  # Centered Title in blue
-    print(blue + vertext.center(len(separator)))  # Centered Version
-    print(blue + separator + reset)  # Blue color for separator
+    print(AnsiColorCode.BLUE + separator)  # Blue color for separator
+    print(AnsiColorCode.RESET + title.center(len(separator)))  # Centered Title in blue
+    print(AnsiColorCode.BLUE + vertext.center(len(separator)))  # Centered Version
+    print(AnsiColorCode.BLUE + separator + AnsiColorCode.RESET)  # Blue color for separator
     print(motd1.center(len(separator)))# used the same method for centering
     print(motd2.center(len(separator)))# used the same method for centering
-    print(blue + separator + reset)  # Blue color for separator
+    print(AnsiColorCode.BLUE + separator + AnsiColorCode.RESET)  # Blue color for separator
 
 def main_menu():
     clear_screen()
@@ -196,13 +177,11 @@ title = "BlueDucky - Bluetooth Device Attacker"
 vertext = "Ver 2.1"
 terminal_width = getterm()
 separator = "=" * terminal_width
-blue = "\033[0m"
-reset = "\033[0m"
 
-print(blue + separator)  # Blue color for separator
-print(reset + title.center(len(separator)))  # White color for title
-print(blue + vertext.center(len(separator)))  # White blue for version number
-print(blue + separator + reset)  # Blue color for separator
-print(f"{reset}Remember, you can still attack devices without visibility{blue}.." + reset)
-print(f"{blue}If you have their {reset}MAC address{blue}.." + reset)
-print(blue + separator + reset)  # Blue color for separator
+print(AnsiColorCode.BLUE + separator)  # Blue color for separator
+print(AnsiColorCode.RESET + title.center(len(separator)))  # White color for title
+print(AnsiColorCode.BLUE + vertext.center(len(separator)))  # White blue for version number
+print(AnsiColorCode.BLUE  + separator + AnsiColorCode.RESET)  # Blue color for separator
+print(f"{AnsiColorCode.RESET}Remember, you can still attack devices without visibility{AnsiColorCode.BLUE}..{AnsiColorCode.RESET}")
+print(f"{AnsiColorCode.BLUE}If you have their {AnsiColorCode.RESET}MAC address{AnsiColorCode.BLUE}..{AnsiColorCode.RESET}")
+print(AnsiColorCode.BLUE + separator + AnsiColorCode.RESET)  # Blue color for separator
