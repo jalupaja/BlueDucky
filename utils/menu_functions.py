@@ -1,4 +1,4 @@
-import os, bluetooth, re, subprocess, time, curses
+import os, bluetooth, re, subprocess, time
 import logging as log
 from utils.AnsiColorCode import AnsiColorCode
 
@@ -123,7 +123,6 @@ def scan_for_devices():
 def getterm():
     size = os.get_terminal_size()
     return size.columns
-
 
 def print_menu():
     title = "BlueDucky - Bluetooth Device Attacker"

@@ -28,7 +28,6 @@ def agent_loop(target_path):
   log.debug("'NoInputNoOutput' pairing-agent is running")
   loop.run()
 
-
 def register_hid_profile(iface, addr):
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SystemBus()
@@ -39,7 +38,7 @@ def register_hid_profile(iface, addr):
     profile_path = "/test/profile"
     profile = Profile(bus, profile_path)
     hid_uuid = "00001124-0000-1000-8000-00805F9B34FB"
-    
+
     # Hardcoded XML content
     xml_content = """<?xml version="1.0" encoding="UTF-8" ?>
 <record>
