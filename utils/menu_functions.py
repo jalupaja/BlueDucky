@@ -7,36 +7,47 @@ from utils.AnsiColorCode import AnsiColorCode
 ##########################
 
 def get_target_address():
-    print(f"\n What is the target address{AnsiColorCode.BLUE}? {AnsiColorCode.RESET}Leave blank and we will scan for you{AnsiColorCode.BLUE}!{AnsiColorCode.RESET}")
-    target_address = input(f"\n {AnsiColorCode.BLUE}> ")
+    print(f"\nWhat is the target address?")
 
-    if target_address == "":
+    # Load known devices
+    known_devices = load_known_devices()
+    if known_devices:
+        print(f"You can also select one of the below known devices")
+        for idx, (addr, name) in enumerate(known_devices):
+            print(f"{AnsiColorCode.BLUE}{idx + 1}{AnsiColorCode.RESET}: Device Name: {AnsiColorCode.BLUE}{name}, Address: {AnsiColorCode.BLUE}{addr}{AnsiColorCode.RESET}")
+
+
+    print(f"Leave blank and we will scan for you{AnsiColorCode.BLUE}!{AnsiColorCode.RESET}")
+    target_address = None
+    text_input = input(f"\n {AnsiColorCode.BLUE}> ")
+
+    if text_input == "":
         devices = scan_for_devices()
+        # Save the scanned devices only if they are not already in known devices
+        new_devices = [device for device in devices if device not in known_devices]
+        save_known_devices(new_devices)
+
         if devices:
-            # Check if the returned list is from known devices or scanned devices
-            if len(devices) == 1 and isinstance(devices[0], tuple) and len(devices[0]) == 2:
-                # A single known device was chosen, no need to ask for selection
-                # I think it would be better to ask, as sometimes I do not want to chose this device and actually need solely to scan for actual devices.
-                confirm = input(f"\n Would you like to register this device{AnsiColorCode.BLUE}:\n{AnsiColorCode.RESET}{devices[0][1]} {devices[0][0]}{AnsiColorCode.BLUE}? {AnsiColorCode.BLUE}({AnsiColorCode.RESET}y{AnsiColorCode.BLUE}/{AnsiColorCode.RESET}n{AnsiColorCode.BLUE}) {AnsiColorCode.BLUE}").strip().lower()
-                if confirm == 'y' or confirm == 'yes':
-                    return devices[0][0]
-                elif confirm != 'y' or 'yes':
-                    return
+            # Show list of scanned devices for user selection
+            for idx, (addr, name) in enumerate(devices):
+                print(f"{AnsiColorCode.RESET}[{AnsiColorCode.BLUE}{idx + 1}{AnsiColorCode.RESET}] {AnsiColorCode.BLUE}Device Name{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{name}, {AnsiColorCode.BLUE}Address{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{addr}")
+            selection = int(input(f"\n{AnsiColorCode.RESET}Select a device by number{AnsiColorCode.BLUE}: {AnsiColorCode.BLUE}")) - 1
+            if 0 <= selection < len(devices):
+                target_address = devices[selection][0]
             else:
-                # Show list of scanned devices for user selection
-                for idx, (addr, name) in enumerate(devices):
-                    print(f"{AnsiColorCode.RESET}[{AnsiColorCode.BLUE}{idx + 1}{AnsiColorCode.RESET}] {AnsiColorCode.BLUE}Device Name{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{name}, {AnsiColorCode.BLUE}Address{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{addr}")
-                selection = int(input(f"\n{AnsiColorCode.RESET}Select a device by number{AnsiColorCode.BLUE}: {AnsiColorCode.BLUE}")) - 1
-                if 0 <= selection < len(devices):
-                    target_address = devices[selection][0]
-                else:
-                    print("\nInvalid selection. Exiting.")
-                    return
+                print("\nInvalid selection. Exiting.")
+                return
         else:
             return
-    elif not is_valid_mac_address(target_address):
+    elif not is_valid_mac_address(text_input):
         print("\nInvalid MAC address format. Please enter a valid MAC address.")
         return
+    elif known_devices:
+        # Check if input is an index for known devices
+        try:
+            target_address = known_devices[int(text_input) - 1]
+        except:
+            pass
 
     return target_address
 
@@ -81,9 +92,9 @@ def print_fancy_ascii_art():
 def clear_screen():
     os.system('clear')
 
-# Function to save discovered devices to a file
-def save_devices_to_file(devices, filename='known_devices.txt'):
-    with open(filename, 'w') as file:
+# Function to append discovered devices to a file
+def save_known_devices(devices, filename='known_devices.txt'):
+    with open(filename, 'a') as file:
         for addr, name in devices:
             file.write(f"{addr},{name}\n")
 
@@ -91,36 +102,22 @@ def save_devices_to_file(devices, filename='known_devices.txt'):
 def scan_for_devices():
     main_menu()
 
-    # Load known devices
-    known_devices = load_known_devices()
-    if known_devices:
-        print(f"\n{AnsiColorCode.RESET}Known devices{AnsiColorCode.BLUE}:")
-        for idx, (addr, name) in enumerate(known_devices):
-            print(f"{AnsiColorCode.BLUE}{idx + 1}{AnsiColorCode.RESET}: Device Name: {AnsiColorCode.BLUE}{name}, Address: {AnsiColorCode.BLUE}{addr}")
-
-        use_known_device = input(f"\n{AnsiColorCode.RESET}Do you want to use one of these known devices{AnsiColorCode.BLUE}? {AnsiColorCode.BLUE}({AnsiColorCode.RESET}yes{AnsiColorCode.BLUE}/{AnsiColorCode.RESET}no{AnsiColorCode.BLUE}): ")
-        if use_known_device.lower() == 'yes':
-            device_choice = int(input(f"{AnsiColorCode.RESET}Enter the index number of the device to attack{AnsiColorCode.BLUE}: "))
-            return [known_devices[device_choice - 1]]
-
     # Normal Bluetooth scan
     print(f"\n{AnsiColorCode.RESET}Attempting to scan now{AnsiColorCode.BLUE}...")
-    nearby_devices = bluetooth.discover_devices(duration=8, lookup_names=True, flush_cache=True, lookup_class=True)
+    try:
+        nearby_devices = bluetooth.discover_devices(duration=8, lookup_names=True, flush_cache=True, lookup_class=True)
+    except OSError as e:
+        log.error(f"{AnsiColorCode.RED}Couldn't scan for Bluetooth devices!\n{AnsiColorCode.RESET}Is your Bluetooth activated?\n{e}")
+        exit(1)
+
     device_list = []
     if len(nearby_devices) == 0:
-        print(f"\n{AnsiColorCode.RESET}[{error}+{AnsiColorCode.RESET}] No nearby devices found.")
+        print(f"\n{AnsiColorCode.RESET}[{AnsiColorCode.RED}+{AnsiColorCode.RESET}] No nearby devices found.")
     else:
-        print("\nFound {} nearby device(s):".format(len(nearby_devices)))
-        for idx, (addr, name, _) in enumerate(nearby_devices):
+        print(f"\nFound {len(nearby_devices)} nearby device(s):")
+        for _, (addr, name, _) in enumerate(nearby_devices):
             device_list.append((addr, name))
 
-    # Save the scanned devices only if they are not already in known devices
-    new_devices = [device for device in device_list if device not in known_devices]
-    if new_devices:
-        known_devices += new_devices
-        save_devices_to_file(known_devices)
-        for idx, (addr, name) in enumerate(new_devices):
-            print(f"{AnsiColorCode.RESET}{idx + 1}{AnsiColorCode.BLUE}: {AnsiColorCode.BLUE}Device Name{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{name}{AnsiColorCode.RESET}, {AnsiColorCode.BLUE}Address{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{addr}")
     return device_list
 
 def getterm():
