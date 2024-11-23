@@ -1,9 +1,9 @@
 # BlueDucky Ver 2.1 (Android) 🦆
 
-Thanks to all the people at HackNexus. Make sure you come join us on VC !
-https://discord.gg/HackNexus
+> This version is a fork of the original, over at [pentestfunctions](https://github.com/pentestfunctions/BlueDucky). My changes start after Version 2.1 and are documented below and in the commit history.
 
-NOTES: I will not be able to run this on a laptop or other device outside of a raspberry pi for testing. Due to this, any issues you have will need to be resolved amonsgt each other as I do not have the spare funds to buy an adapter. 
+Thanks to all the people at HackNexus.
+https://discord.gg/HackNexus
 
 1. [saad0x1's GitHub](https://github.com/saad0x1)
 2. [spicydll's GitHub](https://github.com/spicydll)
@@ -50,14 +50,9 @@ sudo apt install -y bluez-tools bluez-hcidump libbluetooth-dev \
 git clone https://github.com/pybluez/pybluez.git
 cd pybluez
 sudo python3 setup.py install
-
-# build bdaddr from the bluez source
-cd ~/
-git clone --depth=1 https://github.com/bluez/bluez.git
-gcc -o bdaddr ~/bluez/tools/bdaddr.c ~/bluez/src/oui.c -I ~/bluez -lbluetooth
-sudo cp bdaddr /usr/local/bin/
 ```
-### Setup Instructions for Arch-based 
+
+### Setup Instructions for Arch-based
 
 ```bash
 # update pacman & packages
@@ -73,49 +68,45 @@ sudo pacman -S bluez-tools bluez-utils bluez-deprecated-tools \
 git clone https://github.com/pybluez/pybluez.git
 cd pybluez
 sudo python3 setup.py install
+```
 
-# build bdaddr from the bluez source
-cd ~/
-git clone --depth=1 https://github.com/bluez/bluez.git
-gcc -o bdaddr ~/bluez/tools/bdaddr.c ~/bluez/src/oui.c -I ~/bluez -lbluetooth
-sudo cp bdaddr /usr/local/bin/
+### Setup Instructions for NixOS
+
+```bash
+git clone https://github.com/jalupaja/BlueDucky.git
+cd BlueDucky
+
+nix-shell
 ```
 
 ## Running BlueDucky
 ```bash
-git clone https://github.com/pentestfunctions/BlueDucky.git
+git clone https://github.com/jalupaja/BlueDucky.git
 cd BlueDucky
-sudo hciconfig hci0 up
 python3 BlueDucky.py
-```
-
-alternatively,
-
-```bash
-pip3 install -r requirements.txt
 ```
 
 ## Operational Steps 🕹️
 1. On running, it prompts for the target MAC address.
 2. Pressing nothing triggers an automatic scan for devices.
 3. Devices previously found are stored in known_devices.txt.
-4. If known_devices.txt exists, it checks this file before scanning.
-5. Executes using payload.txt file.
+4. If known_devices.txt exists, those devices will be available in the first prompt.
+5. Executes using payload.txt file in DuckyScript format.
 6. Successful execution will result in automatic connection and script running.
 
-## Duckyscript 💻
+## DuckyScript 💻
 🚧 Work in Progress:
 - Suggest me ideas
+
+## Version 2.2 🐛
+- made by me, jalupa
+- Code cleanup
 
 ## Version 2.1 🐛
 - Updated UI
 - Improved User Experience
-- Bluetooth Debugger; Checks your bluetooth adapters, and installed dependancies before allowing access to the application, this is to prevent devices that are not supported.
+- Bluetooth Debugger; Checks your Bluetooth adapters, and installed dependencies before allowing access to the application, this is to prevent devices that are not supported.
 - Please Note: Numerous Changes have been made,please reference the commit history for specific changes.
-  
-## What's Planned for the Next Release?
-- Integrated DuckyScript Console for attacks that want to maintain persistance, after a payload has been ran
-- Suggest What Should be added next! Join https://discord.gg/HackNexus
 
 #### 📝 Example payload.txt:
 ```bash
