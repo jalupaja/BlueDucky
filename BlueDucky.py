@@ -189,14 +189,14 @@ class L2CAPClient:
         self.connected = False
         self.sock = None
 
-    def reconnect(self):
+    def raise_reconnection(self):
         # Notify the main script or trigger a reconnection process
         raise ReconnectionRequiredException("Reconnection required")
 
     def send(self, data):
         if not self.connected:
             log.error("[TX] Not connected")
-            self.reconnect()
+            self.raise_reconnection()
 
         # Get the current timestamp
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -208,8 +208,7 @@ class L2CAPClient:
             log.debug(f"[TX-{self.port}] Data sent successfully")
         except bluetooth.btcommon.BluetoothError as ex:
             log.error(f"[TX-{self.port}] Bluetooth error: {ex}")
-            self.reconnect()
-            self.send(data)  # Retry sending after reconnection
+            self.raise_reconnection()
         except Exception as ex:
             log.error(f"[TX-{self.port}] Exception: {ex}")
             raise
