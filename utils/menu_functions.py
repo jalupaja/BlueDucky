@@ -12,17 +12,17 @@ def get_target_address():
     # Load known devices
     known_devices = load_known_devices()
     if known_devices:
-        print(f"You can also select one of the below known devices")
+        print(f"\nYou can also select one of the below known devices")
         for idx, (addr, name) in enumerate(known_devices):
             print(f"{AnsiColorCode.BLUE}{idx + 1}{AnsiColorCode.RESET}: Device Name: {AnsiColorCode.BLUE}{name}, Address: {AnsiColorCode.BLUE}{addr}{AnsiColorCode.RESET}")
 
-
-    print(f"Leave blank and we will scan for you{AnsiColorCode.BLUE}!{AnsiColorCode.RESET}")
+    print(f"\nLeave blank and we will scan for you{AnsiColorCode.BLUE}!{AnsiColorCode.RESET}")
     target_address = None
     text_input = input(f"\n {AnsiColorCode.BLUE}> ")
 
     if text_input == "":
         devices = scan_for_devices()
+
         # Save the scanned devices only if they are not already in known devices
         new_devices = [device for device in devices if device not in known_devices]
         save_known_devices(new_devices)
@@ -36,18 +36,22 @@ def get_target_address():
                 target_address = devices[selection][0]
             else:
                 print("\nInvalid selection. Exiting.")
-                return
+                return None
         else:
-            return
-    elif not is_valid_mac_address(text_input):
-        print("\nInvalid MAC address format. Please enter a valid MAC address.")
-        return
-    elif known_devices:
-        # Check if input is an index for known devices
-        try:
-            target_address = known_devices[int(text_input) - 1]
-        except:
-            pass
+            return None
+    else:
+        if is_valid_mac_address(text_input):
+            print('yes')
+            target_address = text_input.strip()
+        elif known_devices:
+            # Check if input is an index for known devices
+            try:
+                target_address = known_devices[int(text_input) - 1][0]
+            except:
+                pass
+        else:
+            print("\nInvalid Input.")
+            return None
 
     return target_address
 
@@ -105,7 +109,7 @@ def scan_for_devices():
     # Normal Bluetooth scan
     print(f"\n{AnsiColorCode.RESET}Attempting to scan now{AnsiColorCode.BLUE}...")
     try:
-        nearby_devices = bluetooth.discover_devices(duration=8, lookup_names=True, flush_cache=True, lookup_class=True)
+        nearby_devices = bluetooth.discover_devices(duration=6, lookup_names=True, flush_cache=True)
     except OSError as e:
         log.error(f"{AnsiColorCode.RED}Couldn't scan for Bluetooth devices!\n{AnsiColorCode.RESET}Is your Bluetooth activated?\n{e}")
         exit(1)
@@ -115,7 +119,7 @@ def scan_for_devices():
         print(f"\n{AnsiColorCode.RESET}[{AnsiColorCode.RED}+{AnsiColorCode.RESET}] No nearby devices found.")
     else:
         print(f"\nFound {len(nearby_devices)} nearby device(s):")
-        for _, (addr, name, _) in enumerate(nearby_devices):
+        for _, (addr, name) in enumerate(nearby_devices):
             device_list.append((addr, name))
 
     return device_list
