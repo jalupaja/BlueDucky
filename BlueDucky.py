@@ -146,7 +146,7 @@ class L2CAPConnectionManager:
 
     def connect_all(self):
         try:
-            return sum(client.connect() for client in self.clients.values())
+            return all(client.connect() for client in self.clients.values())
         except ConnectionFailureException as e:
             log.error(f"Connection failure: {e}")
             raise
