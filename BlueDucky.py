@@ -117,7 +117,6 @@ class PairingAgent:
             log.debug("Starting agent process...")
             self.agent = Process(target=agent_loop, args=(self.target_path,))
             self.agent.start()
-            time.sleep(0.25)
             log.debug("Agent process started.")
             return self
         except Exception as e:
@@ -128,7 +127,6 @@ class PairingAgent:
         try:
             log.debug("Terminating agent process...")
             self.agent.kill()
-            time.sleep(2)
             log.debug("Agent process terminated.")
         except Exception as e:
             log.error(f"Error terminating agent process: {e}")
@@ -414,7 +412,6 @@ def process_duckyscript(connection_manager, duckyscript):
     while True:
         client = setup_and_connect(connection_manager)
         client.send_keypress('')  # Send empty report to ensure a clean start
-        time.sleep(0.5)
 
         current_line += line_number # update current_line after a possible break in the following loop
 
@@ -429,8 +426,6 @@ def process_duckyscript(connection_manager, duckyscript):
                     # Reconnection Required
                     log.info(f"{AnsiColorCode.RESET}Reconnection required. Attempting to reconnect{AnsiColorCode.BLUE}...")
                     connection_manager.close_all()
-                    # Sleep before retrying to avoid rapid reconnection attempts
-                    time.sleep(2)
                     break
 
             except Exception as e:
@@ -444,7 +439,7 @@ def process_duckyscript(connection_manager, duckyscript):
             break
 
     log.info("Execution successful")
-    time.sleep(2)
+    time.sleep(1)
 
 def char_to_key_code(char):
     # Mapping for special characters that always require SHIFT
