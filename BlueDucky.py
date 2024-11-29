@@ -671,27 +671,30 @@ def main():
     payloads = os.listdir(payload_folder)
 
     print(f"\nAvailable payloads{AnsiColorCode.BLUE}:")
+    print(f"{AnsiColorCode.RESET}[{AnsiColorCode.BLUE}{0}{AnsiColorCode.RESET}]{AnsiColorCode.BLUE}: live keyboard")
     for idx, payload_file in enumerate(payloads, 1): # Check and enumerate the files inside the payload folder.
-        print(f"{AnsiColorCode.RESET}[{AnsiColorCode.BLUE}{idx}{AnsiColorCode.RESET}]{AnsiColorCode.BLUE}: {AnsiColorCode.BLUE}{payload_file}")
+        print(f"{AnsiColorCode.RESET}[{AnsiColorCode.BLUE}{idx}{AnsiColorCode.RESET}]{AnsiColorCode.BLUE}: {payload_file}")
 
     payload_choice = input(f"\n{AnsiColorCode.BLUE}Enter the number that represents the payload you would like to load{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}")
     selected_payload = None
 
-    try:
-        payload_index = int(payload_choice) - 1
-        selected_payload = os.path.join(payload_folder, payloads[payload_index])
-    except (ValueError, IndexError):
-        print(f"Invalid payload choice. No payload selected.")
-
-    if selected_payload is not None:
-        print(f"{AnsiColorCode.BLUE}Selected payload{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{selected_payload}")
-        duckyscript = read_duckyscript(selected_payload)
+    duckyscript = None
+    if payload_choice == 0:
+        duckyscript = ""
     else:
-        print(f"{AnsiColorCode.RED}No payload selected.")
+        try:
+            payload_index = int(payload_choice) - 1
+            selected_payload = os.path.join(payload_folder, payloads[payload_index])
+        except (ValueError, IndexError):
+            print(f"Invalid payload choice. No payload selected.")
 
+        if selected_payload is not None:
+            print(f"{AnsiColorCode.BLUE}Selected payload{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{selected_payload}")
+            duckyscript = read_duckyscript(selected_payload)
+        else:
+            print(f"{AnsiColorCode.RED}No payload selected.")
 
-
-    if not duckyscript:
+    if duckyscript is None:
         log.info("Payload file not found. Exiting.")
         return
 
