@@ -158,11 +158,8 @@ class L2CAPConnectionManager:
 
 # Custom exception to handle reconnection
 class ReconnectionRequiredException(Exception):
-    def __init__(self, message, current_line=0, current_position=0):
+    def __init__(self, message):
         super().__init__(message)
-        time.sleep(2)
-        self.current_line = current_line
-        self.current_position = current_position
 
 class L2CAPClient:
     def __init__(self, addr, port):
