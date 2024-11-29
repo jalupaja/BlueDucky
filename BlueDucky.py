@@ -679,20 +679,18 @@ def main():
     selected_payload = None
 
     duckyscript = None
-    if payload_choice == 0:
+    try:
+        index = int(payload_choice) - 1
+    except (ValueError):
+        index = -1
+    if index == 0:
         duckyscript = ""
+    elif 0 < index <= len(payloads):
+        selected_payload = os.path.join(payload_folder, payloads[index - 1])
+        print(f"{AnsiColorCode.BLUE}Selected payload{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{selected_payload}")
+        duckyscript = read_duckyscript(selected_payload)
     else:
-        try:
-            payload_index = int(payload_choice) - 1
-            selected_payload = os.path.join(payload_folder, payloads[payload_index])
-        except (ValueError, IndexError):
-            print(f"Invalid payload choice. No payload selected.")
-
-        if selected_payload is not None:
-            print(f"{AnsiColorCode.BLUE}Selected payload{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{selected_payload}")
-            duckyscript = read_duckyscript(selected_payload)
-        else:
-            print(f"{AnsiColorCode.RED}No payload selected.")
+        print(f"{AnsiColorCode.RED}Invalid payload choice. No payload selected.")
 
     if duckyscript is None:
         log.info("Payload file not found. Exiting.")
