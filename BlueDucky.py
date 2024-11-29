@@ -597,14 +597,6 @@ def setup_bluetooth(adapter_id):
     adapter.power(True)
     return adapter
 
-def initialize_pairing(agent_iface, target_address):
-    try:
-        with PairingAgent(agent_iface, target_address) as agent:
-            log.debug("Pairing agent initialized")
-    except Exception as e:
-        log.error(f"Failed to initialize pairing agent: {e}")
-        raise ConnectionFailureException("Pairing agent initialization failed")
-
 def establish_connections(connection_manager):
     if not connection_manager.connect_all():
         raise ConnectionFailureException("Failed to connect to all required ports")
@@ -613,7 +605,14 @@ def setup_and_connect(connection_manager):
     connection_manager.create_connection(1)   # SDP
     connection_manager.create_connection(17)  # HID Control
     connection_manager.create_connection(19)  # HID Interrupt
-    initialize_pairing(adapter_id, target_address)
+
+    try:
+        with PairingAgent(connection_manager.adapter_id, connection_manager.target_address):
+            log.debug("Pairing agent initialized")
+    except Exception as e:
+        log.error(f"Failed to initialize pairing agent: {e}")
+        raise ConnectionFailureException("Pairing agent initialization failed")
+
     establish_connections(connection_manager)
     return connection_manager.clients[19]
 
