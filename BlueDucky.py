@@ -704,7 +704,7 @@ def main():
         log.info("Payload file not found. Exiting.")
         return
 
-    adapter = setup_bluetooth(target_address)
+    adapter = setup_bluetooth(adapter_id)
     adapter.enable_ssp()
 
     connection_manager = L2CAPConnectionManager(target_address, adapter_id)
