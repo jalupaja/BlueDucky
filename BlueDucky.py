@@ -295,15 +295,15 @@ def __process_duckyscript_line(client, line, current_position = 0):
     try:
         if not line or line.upper().startswith("REM"):
             pass
-        if line.upper().startswith("TAB"):
+        elif line.upper().startswith("TAB"):
             client.send_keypress(Key_Codes.TAB)
-        if line.upper().startswith("PRIVATE_BROWSER"):
+        elif line.upper().startswith("PRIVATE_BROWSER"):
             report = bytes([0xa1, 0x01, Modifier_Codes.CTRL.value | Modifier_Codes.SHIFT.value, 0x00, Key_Codes.n.value, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
             client.send(report)
             # Don't forget to send a release report afterwards
             release_report = bytes([0xa1, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
             client.send(release_report)
-        if line.upper().startswith("VOLUME_UP"):
+        elif line.upper().startswith("VOLUME_UP"):
             # Send GUI + V
             hid_report_gui_v = bytes.fromhex("a1010800190000000000")
             client.send(hid_report_gui_v)
@@ -319,7 +319,7 @@ def __process_duckyscript_line(client, line, current_position = 0):
             # Release all keys
             hid_report_release = bytes.fromhex("a1010000000000000000")
             client.send(hid_report_release)
-        if line.upper().startswith("DELAY"):
+        elif line.upper().startswith("DELAY"):
             try:
                 # Extract delay time from the line
                 delay_time = int(line.split()[1])  # Assumes delay time is in milliseconds
@@ -328,7 +328,7 @@ def __process_duckyscript_line(client, line, current_position = 0):
                 log.error(f"Invalid DELAY format in line: {line}")
             except IndexError:
                 log.error(f"DELAY command requires a time parameter in line: {line}")
-        if line.upper().startswith("STRING"):
+        elif line.upper().startswith("STRING"):
             text = line[7:][current_position:]
             for cur_pos, char in enumerate(text, start=1):
                 log.notice(f"Attempting to send letter: {char}")
