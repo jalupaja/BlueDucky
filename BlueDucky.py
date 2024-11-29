@@ -412,6 +412,7 @@ def process_duckyscript(connection_manager, duckyscript):
     while True:
         client = setup_and_connect(connection_manager)
         client.send_keypress('')  # Send empty report to ensure a clean start
+        time.sleep(0.5)
 
         current_line += line_number # update current_line after a possible break in the following loop
 
