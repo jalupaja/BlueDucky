@@ -680,7 +680,7 @@ def main():
 
     duckyscript = None
     try:
-        index = int(payload_choice) - 1
+        index = int(payload_choice)
     except (ValueError):
         index = -1
     if index == 0:
