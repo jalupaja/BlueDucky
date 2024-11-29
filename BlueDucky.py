@@ -335,7 +335,7 @@ def __process_duckyscript_line(client, line, current_position = 0):
             except IndexError:
                 log.error(f"DELAY command requires a time parameter in line: {line}")
         if line.startswith("STRING"):
-            text = line[7:]
+            text = line[7:][current_position:]
             for current_position, char in enumerate(text, start=1):
                 log.notice(f"Attempting to send letter: {char}")
                 # Process each character
