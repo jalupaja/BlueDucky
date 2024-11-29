@@ -300,7 +300,7 @@ def __process_duckyscript_line(client, line, current_position = 0):
     log.info(f"Processing {line}")
     try:
         if not line or line.startswith("REM"):
-            return None
+            pass
         if line.startswith("TAB"):
             client.send_keypress(Key_Codes.TAB)
         if line.startswith("PRIVATE_BROWSER"):
@@ -334,7 +334,6 @@ def __process_duckyscript_line(client, line, current_position = 0):
                 log.error(f"Invalid DELAY format in line: {line}")
             except IndexError:
                 log.error(f"DELAY command requires a time parameter in line: {line}")
-            return  # Move to the next line after the delay
         if line.startswith("STRING"):
             text = line[7:]
             for current_position, char in enumerate(text, start=1):
@@ -444,10 +443,12 @@ def process_duckyscript(connection_manager, duckyscript):
                 current_position = 0
                 current_line += 1
                 return
+        else:
+            # break out of while loop if file is finished
+            break
 
-        log.info("Execution successful")
-        time.sleep(2)
-        break
+    log.info("Execution successful")
+    time.sleep(2)
 
 def char_to_key_code(char):
     # Mapping for special characters that always require SHIFT
