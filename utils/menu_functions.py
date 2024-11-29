@@ -67,7 +67,7 @@ def restart_bluetooth_daemon():
 
 def run(command):
     assert(isinstance(command, list))
-    log.info("executing '%s'" % " ".join(command))
+    log.info(f"executing '{' '.join(command)}'")
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     return result
 

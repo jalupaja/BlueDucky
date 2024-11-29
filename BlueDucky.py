@@ -110,7 +110,7 @@ class PairingAgent:
         self.iface = iface
         self.target_addr = target_addr
         dev_name = "dev_%s" % target_addr.upper().replace(":", "_")
-        self.target_path = "/org/bluez/%s/%s" % (iface, dev_name)
+        self.target_path = f"/org/bluez/{iface}/{dev_name}"
 
     def __enter__(self):
         try:
@@ -245,8 +245,7 @@ class L2CAPClient:
             return raw
 
     def connect(self, timeout=None):
-        log.debug(f"Attempting to connect to {self.addr} on port {self.port}")
-        log.info("connecting to %s on port %d" % (self.addr, self.port))
+        log.info(f"Connecting to {self.addr} on port {self.port}")
         sock = bluetooth.BluetoothSocket(bluetooth.L2CAP)
         sock.settimeout(timeout)
         try:
@@ -254,10 +253,10 @@ class L2CAPClient:
             sock.setblocking(0)
             self.sock = sock
             self.connected = True
-            log.debug("SUCCESS! connected on port %d" % self.port)
+            log.debug(f"SUCCESS! connected on port {self.port}")
         except Exception as ex:
             self.connected = False
-            log.error("ERROR connecting on port %d: %s" % (self.port, ex))
+            log.error(f"ERROR connecting on port {self.port}: {ex}")
             raise ConnectionFailureException(f"Connection failure on port {self.port}")
 
         return self.connected
