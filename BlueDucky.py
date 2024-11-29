@@ -653,9 +653,9 @@ def troubleshoot_bluetooth():
         return False
 
     # List devices to see if any are connected
-    result = subprocess.run(['bluetoothctl', 'devices'], capture_output=True, text=True)
-    if "Device" not in result.stdout:
-        print(f"{AnsiColorCode.RESET}[{AnsiColorCode.RED}!{AnsiColorCode.RESET}] {AnsiColorCode.RED}CRITICAL{AnsiColorCode.RESET}: No Compatible {AnsiColorCode.BLUE}Bluetooth devices{AnsiColorCode.RESET} are connected.")
+    result = subprocess.run(['bluetoothctl', 'show'], capture_output=True, text=True)
+    if "Powered: yes" not in result.stdout:
+        print(f"{AnsiColorCode.RESET}[{AnsiColorCode.RED}!{AnsiColorCode.RESET}] {AnsiColorCode.RED}CRITICAL{AnsiColorCode.RESET}: Bluetooth seems to be turned off.")
         return False
 
     # if no issues are found then continue

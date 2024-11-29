@@ -31,9 +31,14 @@ def get_target_address():
             # Show list of scanned devices for user selection
             for idx, (addr, name) in enumerate(devices):
                 print(f"{AnsiColorCode.RESET}[{AnsiColorCode.BLUE}{idx + 1}{AnsiColorCode.RESET}] {AnsiColorCode.BLUE}Device Name{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{name}, {AnsiColorCode.BLUE}Address{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{addr}")
-            selection = int(input(f"\n{AnsiColorCode.RESET}Select a device by number{AnsiColorCode.BLUE}: {AnsiColorCode.BLUE}")) - 1
-            if 0 <= selection < len(devices):
-                target_address = devices[selection][0]
+            try:
+                selection = int(input(f"\n{AnsiColorCode.RESET}Select a device by number{AnsiColorCode.BLUE}: {AnsiColorCode.BLUE}"))
+            except ValueError:
+                # selection not an integer -> Invalid selection
+                selection = 0
+
+            if 0 < selection <= len(devices):
+                target_address = devices[selection - 1][0]
             else:
                 print("\nInvalid selection. Exiting.")
                 return None
@@ -41,12 +46,13 @@ def get_target_address():
             return None
     else:
         if is_valid_mac_address(text_input):
-            print('yes')
             target_address = text_input.strip()
         elif known_devices:
             # Check if input is an index for known devices
             try:
-                target_address = known_devices[int(text_input) - 1][0]
+                index = int(text_input)
+                if 0 < index <= len(known_devices):
+                    target_address = known_devices[index - 1][0]
             except:
                 pass
         else:
@@ -108,8 +114,11 @@ def scan_for_devices():
 
     # Normal Bluetooth scan
     print(f"\n{AnsiColorCode.RESET}Attempting to scan now{AnsiColorCode.BLUE}...")
+    subprocess.run(['bluetoothctl', 'scan', 'on'], capture_output=True, text=True)
+    # Wait for scanning before collection scanned devices
+    time.sleep(3)
     try:
-        nearby_devices = bluetooth.discover_devices(duration=6, lookup_names=True, flush_cache=True)
+        nearby_devices = bluetooth.discover_devices(duration=3, lookup_names=True, flush_cache=True)
     except OSError as e:
         log.error(f"{AnsiColorCode.RED}Couldn't scan for Bluetooth devices!\n{AnsiColorCode.RESET}Is your Bluetooth activated?\n{e}")
         exit(1)
