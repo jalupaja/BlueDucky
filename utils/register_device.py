@@ -28,12 +28,10 @@ def agent_loop(target_path):
   log.debug("'NoInputNoOutput' pairing-agent is running")
   loop.run()
 
-def register_hid_profile(iface, addr):
+def register_hid_profile():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SystemBus()
     get_obj = lambda path, iface: dbus.Interface(bus.get_object("org.bluez", path), iface)
-    addr_str = addr.replace(":", "_")
-    path = "/org/bluez/%s/dev_%s" % (iface, addr_str)
     manager = get_obj("/org/bluez", "org.bluez.ProfileManager1")
     profile_path = "/test/profile"
     profile = Profile(bus, profile_path)

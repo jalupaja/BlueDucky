@@ -587,10 +587,9 @@ def terminate_child_processes():
             proc.terminate()
             proc.join()
 
-
-def setup_bluetooth(target_address, adapter_id):
+def setup_bluetooth(adapter_id):
     restart_bluetooth_daemon()
-    profile_proc = Process(target=register_hid_profile, args=(adapter_id, target_address))
+    profile_proc = Process(target=register_hid_profile)
     profile_proc.start()
     child_processes.append(profile_proc)
     adapter = Adapter(adapter_id)
@@ -611,7 +610,7 @@ def establish_connections(connection_manager):
     if not connection_manager.connect_all():
         raise ConnectionFailureException("Failed to connect to all required ports")
 
-def setup_and_connect(connection_manager, target_address, adapter_id):
+def setup_and_connect(connection_manager):
     connection_manager.create_connection(1)   # SDP
     connection_manager.create_connection(17)  # HID Control
     connection_manager.create_connection(19)  # HID Interrupt
