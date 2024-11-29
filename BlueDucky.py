@@ -411,7 +411,6 @@ def live_keyboard(connection_manager):
     while True:
         client = setup_and_connect(connection_manager)
         client.send_keypress('')  # Send empty report to ensure a clean start
-        time.sleep(0.5)
 
         while True:
             if current_position is None: # only read new line if current line has been processed
@@ -419,7 +418,7 @@ def live_keyboard(connection_manager):
                 line = input(f"{AnsiColorCode.BLUE}Input the next duckyscript line (EOF to disconnect): {AnsiColorCode.RESET}: {AnsiColorCode.BLUE}")
                 if line.strip() == "EOF":
                     log.info("Execution successful")
-                    time.sleep(2)
+                    time.sleep(1)
                     return
 
             try:
@@ -430,9 +429,6 @@ def live_keyboard(connection_manager):
             if current_position is not None:
                 # Reconnection Required
                 log.info(f"{AnsiColorCode.RESET}Reconnection required. Attempting to reconnect{AnsiColorCode.BLUE}...")
-                connection_manager.close_all()
-                # Sleep before retrying to avoid rapid reconnection attempts
-                time.sleep(2)
                 break
 
 def process_duckyscript(connection_manager, duckyscript):
