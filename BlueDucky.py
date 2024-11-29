@@ -711,8 +711,7 @@ def main():
 
     process_duckyscript(connection_manager, duckyscript)
 
-    command = f'echo -e "remove {target_address}\n" | bluetoothctl'
-    subprocess.run(command, shell=True)
+    subprocess.run(['bluetoothctl', 'remove', target_address], check=True, stdout=subprocess.PIPE)
     print(f"{AnsiColorCode.BLUE}Successfully Removed device{AnsiColorCode.RESET}: {AnsiColorCode.BLUE}{target_address}{AnsiColorCode.RESET}")
 
 if __name__ == "__main__":
