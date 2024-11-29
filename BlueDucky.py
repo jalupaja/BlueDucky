@@ -330,7 +330,7 @@ def __process_duckyscript_line(client, line, current_position = 0):
                 log.error(f"DELAY command requires a time parameter in line: {line}")
         if line.startswith("STRING"):
             text = line[7:][current_position:]
-            for current_position, char in enumerate(text, start=1):
+            for cur_pos, char in enumerate(text, start=1):
                 log.notice(f"Attempting to send letter: {char}")
                 # Process each character
                 try:
@@ -378,7 +378,7 @@ def __process_duckyscript_line(client, line, current_position = 0):
                             client.send_keypress(key_code)
                         else:
                             log.warning(f"Unsupported character '{char}' in Duckyscript")
-
+                    current_position = cur_pos
                 except AttributeError as e:
                     log.warning(f"Attribute error: {e} - Unsupported character '{char}' in Duckyscript")
 
