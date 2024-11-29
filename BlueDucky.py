@@ -425,7 +425,6 @@ def process_duckyscript(connection_manager, duckyscript):
                 else:
                     # Reconnection Required
                     log.info(f"{AnsiColorCode.RESET}Reconnection required. Attempting to reconnect{AnsiColorCode.BLUE}...")
-                    connection_manager.close_all()
                     break
 
             except Exception as e:
