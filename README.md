@@ -1,4 +1,4 @@
-# BlueDucky Ver 2.1 (Android) 🦆
+# BlueDucky Ver 2.2 (Android) 🦆
 
 > This version is a fork of the original, over at [pentestfunctions](https://github.com/pentestfunctions/BlueDucky). My changes start after Version 2.1 and are documented below and in the commit history.
 
@@ -34,7 +34,7 @@ I've successfully run this on a Raspberry Pi 4 using the default Bluetooth modul
 
 ## Installation and Usage 🛠️
 
-### Setup Instructions for Debian-based 
+### Setup Instructions for Debian-based
 
 ```bash
 # update apt
@@ -101,6 +101,7 @@ python3 BlueDucky.py
 ## Version 2.2 🐛
 - made by me, jalupa
 - Code cleanup
+- Add live-keyboard with DuckyScript
 
 ## Version 2.1 🐛
 - Updated UI
