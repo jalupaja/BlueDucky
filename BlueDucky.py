@@ -411,6 +411,7 @@ def live_keyboard(connection_manager):
     while True:
         client = setup_and_connect(connection_manager)
         client.send_keypress('')  # Send empty report to ensure a clean start
+        time.sleep(0.5)
 
         while True:
             if current_position is None: # only read new line if current line has been processed
