@@ -60,7 +60,7 @@ sudo pacman -Syyu
 
 # install dependencies
 # since arch doesn't separate lib packages: libbluetooth-dev included in bluez package
-sudo pacman -S bluez-tools bluez-utils bluez-deprecated-tools \
+sudo pacman -S bluez-tools bluez-utils bluez-libs bluez-deprecated-tools \
                python-setuptools python-pydbus
                git gcc python-pip \
 
