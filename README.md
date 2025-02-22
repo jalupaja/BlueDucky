@@ -1,6 +1,6 @@
 # BlueDucky Ver 2.2 (Android) 🦆
 
-> This version is a fork of the original, over at [pentestfunctions](https://github.com/pentestfunctions/BlueDucky). My changes start after Version 2.1 and are documented below and in the commit history.
+> This version is a fork of the original, over at [pentestfunctions](https://github.com/pentestfunctions/BlueDucky). [My changes](https://github.com/jalupaja/BlueDucky) start after Version 2.1 and are documented below and in the commit history.
 
 Thanks to all the people at HackNexus.
 https://discord.gg/HackNexus
@@ -34,8 +34,7 @@ I've successfully run this on a Raspberry Pi 4 using the default Bluetooth modul
 
 ## Installation and Usage 🛠️
 
-### Setup Instructions for Debian-based
-
+### Setup Instructions for Debian-based Systems
 ```bash
 # update apt
 sudo apt-get update
@@ -52,8 +51,7 @@ cd pybluez
 sudo python3 setup.py install
 ```
 
-### Setup Instructions for Arch-based
-
+### Setup Instructions for Arch-based Systems
 ```bash
 # update pacman & packages
 sudo pacman -Syyu
@@ -71,7 +69,6 @@ sudo python3 setup.py install
 ```
 
 ### Setup Instructions for NixOS
-
 ```bash
 git clone https://github.com/jalupaja/BlueDucky.git
 cd BlueDucky
